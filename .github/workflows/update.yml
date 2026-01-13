@@ -8,13 +8,14 @@ on:
 jobs:
   update-feed:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Fetch Telegraaf RSS
         run: |
-          curl -s https://www.telegraaf.nl/entertainment/rss > telegraaf.xml
+          curl -s https://www.telegraaf.nl/entertainment/rss -o telegraaf.xml
 
       - name: Generate feed.xml
         run: |
@@ -27,10 +28,13 @@ jobs:
           grep -o '<item>.*</item>' telegraaf.xml >> feed.xml
           echo '</channel></rss>' >> feed.xml
 
-      - name: Commit changes
+      - name: Configure Git
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Commit and push changes
+        run: |
           git add feed.xml
-          git commit -m "Update feed" || echo "No changes"
+          git commit -m "Update feed" || echo "No changes to commit"
           git push
