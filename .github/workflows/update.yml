@@ -14,7 +14,8 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Fetch Telegraaf RSS
-        run: curl -s https://www.telegraaf.nl/entertainment/rss -o telegraaf.xml
+        run: |
+          curl -s https://www.telegraaf.nl/entertainment/rss -o telegraaf.xml || echo "<rss></rss>" > telegraaf.xml
 
       - name: Generate feed.xml
         run: |
@@ -24,7 +25,7 @@ jobs:
           echo '<link>https://www.telegraaf.nl/entertainment</link>' >> feed.xml
           echo '<description>Proxy feed voor Feedly</description>' >> feed.xml
           echo "<lastBuildDate>$(date -R)</lastBuildDate>" >> feed.xml
-          grep -o '<item>.*</item>' telegraaf.xml >> feed.xml
+          grep -o '<item>.*</item>' telegraaf.xml || echo "<item><title>Geen items gevonden</title></item>" >> feed.xml
           echo '</channel></rss>' >> feed.xml
 
       - name: Configure Git
@@ -36,4 +37,4 @@ jobs:
         run: |
           git add feed.xml
           git commit -m "Update feed" || echo "No changes"
-          git push
+          git push || echo "Push skipped"
