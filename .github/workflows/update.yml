@@ -25,7 +25,7 @@ jobs:
           echo '<link>https://www.telegraaf.nl/entertainment</link>' >> feed.xml
           echo '<description>Proxy feed voor Feedly</description>' >> feed.xml
           echo "<lastBuildDate>$(date -R)</lastBuildDate>" >> feed.xml
-          grep -o '<item>.*</item>' telegraaf.xml || echo "<item><title>Geen items gevonden</title></item>" >> feed.xml
+          grep -o '<item>.*</item>' telegraaf.xml >> feed.xml || echo "<item><title>Geen items gevonden</title></item>" >> feed.xml
           echo '</channel></rss>' >> feed.xml
 
       - name: Configure Git
@@ -35,6 +35,6 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          git add feed.xml
-          git commit -m "Update feed" || echo "No changes"
-          git push || echo "Push skipped"
+          git add feed.xml || echo "feed.xml not found"
+          git commit -m "Update feed" || echo "No changes to commit"
+          git push || echo "Push failed or skipped"
