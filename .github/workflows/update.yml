@@ -13,11 +13,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install xmlstarlet
-        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
-
-      - name: Fetch Telegraaf RSS
-        run: curl -s https://www.telegraaf.nl/entertainment/rss -o telegraaf.xml
+      - name: Fetch HTML
+        run: curl -s https://www.telegraaf.nl/entertainment -o page.html
 
       - name: Generate feed.xml
         run: |
@@ -27,7 +24,15 @@ jobs:
           echo '<link>https://www.telegraaf.nl/entertainment</link>' >> feed.xml
           echo '<description>Proxy feed voor Feedly</description>' >> feed.xml
           echo "<lastBuildDate>$(date -R)</lastBuildDate>" >> feed.xml
-          xmlstarlet sel -t -c "//item" telegraaf.xml >> feed.xml
+
+          # Pak de eerste 10 artikelen uit de HTML
+          grep -o 'href="/entertainment/[^"]*"' page.html | head -n 10 | while read -r link; do
+            url="https://www.telegraaf.nl${link#href=\"}"
+            url="${url%\"}"
+            title=$(echo "$url" | sed 's#.*/##; s/-/ /g')
+            echo "<item><title>${title}</title><link>${url}</link></item>" >> feed.xml
+          done
+
           echo '</channel></rss>' >> feed.xml
 
       - name: Configure Git
