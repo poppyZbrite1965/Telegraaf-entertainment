@@ -1,0 +1,36 @@
+name: Update Telegraaf Entertainment Feed
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  update-feed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Fetch Telegraaf RSS
+        run: |
+          curl -s https://www.telegraaf.nl/entertainment/rss > telegraaf.xml
+
+      - name: Generate feed.xml
+        run: |
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > feed.xml
+          echo '<rss version="2.0"><channel>' >> feed.xml
+          echo '<title>Telegraaf Entertainment (Proxy)</title>' >> feed.xml
+          echo '<link>https://www.telegraaf.nl/entertainment</link>' >> feed.xml
+          echo '<description>Proxy feed voor Feedly</description>' >> feed.xml
+          echo "<lastBuildDate>$(date -R)</lastBuildDate>" >> feed.xml
+          grep -o '<item>.*</item>' telegraaf.xml >> feed.xml
+          echo '</channel></rss>' >> feed.xml
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add feed.xml
+          git commit -m "Update feed" || echo "No changes"
+          git push
